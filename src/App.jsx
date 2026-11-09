@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 
 const phone = '254111994579'
+const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Nairobi' })
 const whatsapp = `https://wa.me/${phone}?text=${encodeURIComponent(
   'Hello Celestique Beauty Spa, I would like to book an appointment. Please share your available services and times.'
 )}`
@@ -94,6 +95,22 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const closeMenu = () => setMenuOpen(false)
+
+  const submitBooking = (event) => {
+    event.preventDefault()
+    const data = new FormData(event.currentTarget)
+    const message = `Hello Celestique Beauty Spa, I would like to request an appointment.
+
+Name: ${data.get("name")}
+Phone: ${data.get("phone")}
+Service: ${data.get("service")}
+Preferred date: ${data.get("date")}
+Preferred time: ${data.get("time")}
+Additional message: ${data.get("message") || "None"}
+
+Please confirm availability. Thank you.`
+    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+  }
 
   return (
     <main>
@@ -278,13 +295,60 @@ function App() {
         </div>
       </section>
 
-      <section className="booking-banner">
+      <section className="booking-banner" id="booking">
         <span className="eyebrow">YOUR BEAUTY JOURNEY STARTS HERE</span>
         <h2>Make time for <em>yourself.</em></h2>
-        <p>Because you deserve a moment that is all about you.</p>
-        <a className="btn btn-light" href={whatsapp} target="_blank" rel="noreferrer">
-          Book via WhatsApp ↗
-        </a>
+        <p>Request your preferred appointment at Celestique Beauty Spa.</p>
+
+        <form className="booking-form" onSubmit={submitBooking}>
+          <div className="booking-fields">
+            <label>Full name
+              <input name="name" type="text" placeholder="Your full name" required />
+            </label>
+
+            <label>Phone number
+              <input name="phone" type="tel" placeholder="Your WhatsApp number" required />
+            </label>
+
+            <label>Choose a service
+              <select name="service" defaultValue="" required>
+                <option value="" disabled>Select a service</option>
+                {services.map((service) => (
+                  <option key={service.name} value={service.name}>{service.name}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>Preferred date
+              <input name="date" type="date" min={today} required />
+            </label>
+
+            <label>Preferred time
+              <select name="time" defaultValue="" required>
+                <option value="" disabled>Select a preferred time</option>
+                <option>8:00 AM</option>
+                <option>9:00 AM</option>
+                <option>10:00 AM</option>
+                <option>11:00 AM</option>
+                <option>12:00 PM</option>
+                <option>1:00 PM</option>
+                <option>2:00 PM</option>
+                <option>3:00 PM</option>
+                <option>4:00 PM</option>
+                <option>5:00 PM</option>
+              </select>
+            </label>
+
+            <label className="booking-message">Additional message (optional)
+              <textarea name="message" rows="3" placeholder="Any preferences or details we should know?" />
+            </label>
+          </div>
+
+          <button className="btn btn-light booking-submit" type="submit">
+            Send Booking Request via WhatsApp ↗
+          </button>
+          <small className="booking-note">Your appointment is confirmed only after Celestique checks availability and responds.</small>
+        </form>
       </section>
 
       <section className="contact-section section" id="contact">
