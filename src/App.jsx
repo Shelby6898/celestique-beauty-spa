@@ -16,69 +16,87 @@ const services = [
   {
     category: 'NAIL CARE',
     name: 'Manicure',
+      price: 'KSh 350',
     description: 'Beautifully groomed nails with a polished, elegant finish.',
     image: 'photo-1604654894610-df63bc536371',
   },
   {
     category: 'NAIL CARE',
     name: 'Pedicure',
+      price: 'Half: KSh 350 · Full: KSh 500',
     description: 'Give your feet the care, comfort and attention they deserve.',
     image: 'photo-1519014816548-bf5fe059798b',
   },
   {
     category: 'NAIL ENHANCEMENT',
     name: 'Gel Application',
+      price: 'KSh 350',
     description: 'A glossy, refined finish for beautiful everyday nails.',
     image: 'photo-1610992015732-2449b76344bc',
   },
   {
     category: 'NAIL ENHANCEMENT',
     name: 'Acrylic Nails',
+      price: 'KSh 1,500–2,000',
     description: 'Elegant nail extensions with your preferred finish.',
     image: '/images/acrylic-nails.jpg',
   },
   {
     category: 'NAIL ENHANCEMENT',
     name: 'Builder Gel',
+      price: 'KSh 500–800',
     description: 'Beautiful structure, strength and a natural-looking finish.',
     image: 'photo-1604902396830-aca29e19b067',
   },
   {
     category: 'NAIL ENHANCEMENT',
     name: 'Ombré Nails',
+      price: 'KSh 800',
     description: 'A seamless blend of colours for a sophisticated look.',
     image: 'photo-1604654894610-df63bc536371',
   },
   {
     category: 'NAIL ENHANCEMENT',
     name: 'Tips Gel & Extensions',
+      price: 'KSh 600–800',
     description: 'Beautifully extended nails tailored to your style.',
     image: '/images/nail-extensions.jpg',
   },
   {
     category: 'BROW & LASH',
     name: 'Eyebrow Shaping',
+      price: 'KSh 50',
     description: 'Enhance your natural features with beautifully shaped brows.',
     image: '/images/lashes-eyebrows.jpg',
   },
   {
     category: 'BROW & LASH',
     name: 'Eyebrow Tinting',
+      price: 'KSh 100',
     description: 'Add definition and depth to your natural brows.',
     image: 'photo-1512496015851-a90fb38ba796',
   },
   {
     category: 'BROW & LASH',
     name: 'Eyelash Application',
+      price: 'KSh 500–1,500',
     description: 'Elevate your look with beautifully enhanced lashes.',
     image: '/images/lashes-eyebrows.jpg',
   },
   {
     category: 'SKINCARE',
     name: 'Facial Skincare',
+      price: 'KSh 500',
     description: 'A refreshing skincare experience focused on your glow.',
     image: 'photo-1570172619644-dfd03ed5d881',
   },
+]
+
+const packages = [
+  { name: 'Tips Gel + Pedicure', price: 'KSh 1,000' },
+  { name: 'Manicure + Pedicure + Gel Application', price: 'KSh 1,100' },
+  { name: 'Full Body / Combo', description: 'Facial + Tips Gel + Builder Gel + Pedicure + Manicure + Eyelashes', price: 'KSh 3,000' },
+  { name: 'Gel Hands and Legs', price: 'KSh 600' },
 ]
 
 const gallery = [
@@ -264,6 +282,7 @@ Please confirm availability. Thank you.`
                 <span className="service-category">{service.category}</span>
                 <h3>{service.name}</h3>
                 <p>{service.description}</p>
+                  <p className="service-price">{service.price}</p>
                 <a
                   href={bookService(service.name)}
                   target="_blank"
@@ -273,6 +292,30 @@ Please confirm availability. Thank you.`
                   ENQUIRE & BOOK ↗
                 </a>
               </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+
+      <section className="packages-section section" id="packages">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">EXCLUSIVE BEAUTY DEALS</span>
+            <h2>Special <em>packages.</em></h2>
+          </div>
+          <p>Enjoy more of your favourite treatments with our special offers.</p>
+        </div>
+        <div className="packages-grid">
+          {packages.map((item) => (
+            <article className="package-card" key={item.name}>
+              <span className="package-label">SPECIAL OFFER</span>
+              <h3>{item.name}</h3>
+              {item.description && <p>{item.description}</p>}
+              <strong>{item.price}</strong>
+              <a href={bookService(item.name)} target="_blank" rel="noreferrer">
+                BOOK THIS PACKAGE ↗
+              </a>
             </article>
           ))}
         </div>
@@ -314,8 +357,18 @@ Please confirm availability. Thank you.`
               <select name="service" defaultValue="" required>
                 <option value="" disabled>Select a service</option>
                 {services.map((service) => (
-                  <option key={service.name} value={service.name}>{service.name}</option>
+                  service.name === 'Pedicure' ? (
+                    <optgroup key={service.name} label="Pedicure">
+                      <option value="Half Pedicure">Half Pedicure — KSh 350</option>
+                      <option value="Full Pedicure">Full Pedicure — KSh 500</option>
+                    </optgroup>
+                  ) : (
+                    <option key={service.name} value={service.name}>{service.name} — {service.price}</option>
+                  )
                 ))}
+                <optgroup label="Special packages">
+                  {packages.map((item) => <option key={item.name} value={item.name}>{item.name} — {item.price}</option>)}
+                </optgroup>
               </select>
             </label>
 
