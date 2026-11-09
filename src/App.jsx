@@ -34,7 +34,7 @@ const services = [
     category: 'NAIL ENHANCEMENT',
     name: 'Acrylic Nails',
     description: 'Elegant nail extensions with your preferred finish.',
-    image: 'photo-1632345031435-8727f6897d53',
+    image: '/images/acrylic-nails.jpg',
   },
   {
     category: 'NAIL ENHANCEMENT',
@@ -52,13 +52,13 @@ const services = [
     category: 'NAIL ENHANCEMENT',
     name: 'Tips Gel & Extensions',
     description: 'Beautifully extended nails tailored to your style.',
-    image: 'photo-1610992015732-2449b76344bc',
+    image: '/images/nail-extensions.jpg',
   },
   {
     category: 'BROW & LASH',
     name: 'Eyebrow Shaping',
     description: 'Enhance your natural features with beautifully shaped brows.',
-    image: 'photo-1583001931096-959e9a1a6223',
+    image: '/images/lashes-eyebrows.jpg',
   },
   {
     category: 'BROW & LASH',
@@ -70,7 +70,7 @@ const services = [
     category: 'BROW & LASH',
     name: 'Eyelash Application',
     description: 'Elevate your look with beautifully enhanced lashes.',
-    image: 'photo-1583001931096-959e9a1a6223',
+    image: '/images/lashes-eyebrows.jpg',
   },
   {
     category: 'SKINCARE',
@@ -81,10 +81,9 @@ const services = [
 ]
 
 const gallery = [
-  'photo-1604654894610-df63bc536371',
-  'photo-1610992015732-2449b76344bc',
-  'photo-1632345031435-8727f6897d53',
-  'photo-1570172619644-dfd03ed5d881',
+  '/images/acrylic-nails.jpg',
+  '/images/lashes-eyebrows.jpg',
+  '/images/nail-extensions.jpg',
 ]
 
 function photo(id, width = 700) {
@@ -105,6 +104,7 @@ function App() {
 
       <header className="navbar">
         <a className="brand" href="#home" onClick={closeMenu}>
+          <img src="/images/celestique-logo.jpg" alt="Celestique Beauty Spa" className="brand-logo" />
           <span className="brand-name">Celestique</span>
           <span className="brand-subtitle">BEAUTY SPA</span>
         </a>
@@ -235,7 +235,7 @@ function App() {
             <article className="service-card" key={service.name}>
               <div className="service-image">
                 <img
-                  src={photo(service.image, 650)}
+                  src={service.image.startsWith('/') ? service.image : photo(service.image, 650)}
                   alt={service.name}
                   loading="lazy"
                 />
@@ -272,7 +272,7 @@ function App() {
         <div className="gallery-grid">
           {gallery.map((id, index) => (
             <div className="gallery-item" key={id + index}>
-              <img src={photo(id, 800)} alt={`Beauty inspiration ${index + 1}`} loading="lazy" />
+              <img src={id} alt={`Celestique Beauty Spa service ${index + 1}`} loading="lazy" />
             </div>
           ))}
         </div>
@@ -334,8 +334,7 @@ function App() {
 
       <footer className="footer">
         <a className="brand footer-brand" href="#home">
-          <span className="brand-name">Celestique</span>
-          <span className="brand-subtitle">BEAUTY SPA</span>
+          <img src="/images/celestique-logo.jpg" alt="Celestique Beauty Spa" className="brand-logo" />
         </a>
         <p>Beauty • Elegance • Confidence</p>
         <div className="footer-bottom">
