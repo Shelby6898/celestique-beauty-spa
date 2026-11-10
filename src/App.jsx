@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from './lib/supabase'
 import './App.css'
 
 const phone = '254111994579'
@@ -111,23 +112,260 @@ function photo(id, width = 700) {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [bookingLoading, setBookingLoading] = useState(false)
+  const [bookingMessage, setBookingMessage] = useState("")
+  const [bookingWhatsAppUrl, setBookingWhatsAppUrl] = useState("")
+  const [activeServices, setActiveServices] = useState([])
+  const [activePackages, setActivePackages] = useState([])
+  const [businessHours, setBusinessHours] = useState([])
+  const [blockedDates, setBlockedDates] = useState([])
+  const [selectedBookingDate, setSelectedBookingDate] = useState("")
+  const [selectedBookingTime, setSelectedBookingTime] = useState("")
+  const [dateMessage, setDateMessage] = useState("")
+
+  useEffect(() => {
+    let cancelled = false
+    const loadServices = async () => {
+      const { data, error } = await supabase.from("services").select("name, category, description, price_label, is_active").eq("is_active", true).order("display_order", { ascending: true })
+      if (error) { console.error("Could not load services:", error); return }
+      const live = data.map(item => {
+        const original = services.find(service => service.name === item.name)
+        return { ...original, ...item, category: original?.category || item.category.toUpperCase(), price: item.price_label || original?.price || "" }
+      })
+      if (!cancelled) setActiveServices(live)
+    }
+    loadServices()
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const loadPackages = async () => {
+      const { data, error } = await supabase.from("packages").select("name, description, price, price_label, is_active").eq("is_active", true).order("display_order", { ascending: true })
+      if (error) { console.error("Could not load packages:", error); return }
+      const live = data.map(item => {
+        const original = packages.find(pkg => pkg.name === item.name)
+        const price = item.price_label || (item.price != null ? `KSh ${Number(item.price).toLocaleString("en-KE")}` : original?.price || "")
+        return { ...original, ...item, price }
+      })
+      if (!cancelled) setActivePackages(live)
+    }
+    loadPackages()
+    return () => { cancelled = true }
+  }, [])
+
+
+  useEffect(() => {
+    const loadBusinessHours = async () => {
+      const { data, error } = await supabase
+        .from("business_hours")
+        .select("day_of_week, opening_time, closing_time, is_closed")
+        .order("day_of_week")
+
+      if (error) {
+        console.error("Could not load business hours:", error)
+        return
+      }
+
+      setBusinessHours(data || [])
+    }
+
+    loadBusinessHours()
+  }, [])
+
+
+  useEffect(() => {
+    const loadBlockedDates = async () => {
+      const { data, error } = await supabase
+        .from("blocked_dates")
+        .select("blocked_date")
+
+      if (error) {
+        console.error("Could not load blocked dates:", error)
+        return
+      }
+
+      setBlockedDates((data || []).map(item => item.blocked_date))
+    }
+
+    loadBlockedDates()
+  }, [])
+
+  const handleBookingDateChange = (event) => {
+    const selectedDate = event.target.value
+    setSelectedBookingTime("")
+    if (!selectedDate) {
+      setSelectedBookingDate("")
+      setDateMessage("")
+      return
+    }
+
+    if (blockedDates.includes(selectedDate)) {
+      setSelectedBookingDate("")
+      event.target.value = ""
+      setDateMessage("The salon is unavailable on this date. Please choose another day.")
+      return
+    }
+
+    const dayOfWeek = new Date(selectedDate + "T00:00:00Z").getUTCDay()
+    const schedule = businessHours.find(day => day.day_of_week === dayOfWeek)
+
+    if (!schedule || schedule.is_closed) {
+      setSelectedBookingDate("")
+      event.target.value = ""
+      setDateMessage(!schedule
+        ? "Business hours are unavailable. Please try again."
+        : "The salon is closed on this date. Please choose another day.")
+      return
+    }
+
+    setSelectedBookingDate(selectedDate)
+    setDateMessage("")
+    setBookingMessage("")
+  }
+
+
+  const selectedDayOfWeek = selectedBookingDate
+    ? new Date(selectedBookingDate + "T00:00:00Z").getUTCDay()
+    : -1
+
+  const selectedDayHours = businessHours.find(
+    day => day.day_of_week === selectedDayOfWeek
+  )
+
+  const availableBookingTimes = []
+
+  if (selectedDayHours && !selectedDayHours.is_closed) {
+    const [openHour, openMinute] = selectedDayHours.opening_time.split(":").map(Number)
+    const [closeHour, closeMinute] = selectedDayHours.closing_time.split(":").map(Number)
+    const openingMinutes = openHour * 60 + openMinute
+    const closingMinutes = closeHour * 60 + closeMinute
+
+    for (let minutes = openingMinutes; minutes < closingMinutes; minutes += 60) {
+      const hour = Math.floor(minutes / 60)
+      const minute = minutes % 60
+      const period = hour >= 12 ? "PM" : "AM"
+      const displayHour = hour % 12 || 12
+      availableBookingTimes.push(
+        `${displayHour}:${String(minute).padStart(2, "0")} ${period}`
+      )
+    }
+  }
 
   const closeMenu = () => setMenuOpen(false)
 
-  const submitBooking = (event) => {
+  const submitBooking = async (event) => {
     event.preventDefault()
+    if (bookingLoading) return
+
     const data = new FormData(event.currentTarget)
-    const message = `Hello Celestique Beauty Spa, I would like to request an appointment.
+    setBookingLoading(true)
+    setBookingMessage("")
+
+    const requestedDate = String(data.get("date") || "")
+    const requestedTime = String(data.get("time") || "")
+    const requestedDay = new Date(requestedDate + "T00:00:00Z").getUTCDay()
+    const requestedSchedule = businessHours.find(day => day.day_of_week === requestedDay)
+
+    if (!requestedSchedule || requestedSchedule.is_closed ||
+        !availableBookingTimes.includes(requestedTime) ||
+        requestedDate !== selectedBookingDate ||
+        requestedTime !== selectedBookingTime) {
+      setBookingMessage("Please select a valid open date and appointment time.")
+      setBookingLoading(false)
+      return
+    }
+
+    try {
+      const { data: blockedDate, error: blockedDateError } = await supabase
+        .from("blocked_dates")
+        .select("blocked_date")
+        .eq("blocked_date", requestedDate)
+        .maybeSingle()
+
+      if (blockedDateError) throw blockedDateError
+
+      if (blockedDate) {
+        setBookingMessage("The salon is unavailable on this date. Please choose another day.")
+        return
+      }
+
+      const selected = String(data.get("service"))
+      const isPedicure = selected === "Half Pedicure" || selected === "Full Pedicure"
+      const isPackage = activePackages.some(item => item.name === selected)
+
+      let serviceId = null
+      let packageId = null
+      let serviceOption = null
+
+      if (isPackage) {
+        const { data: item, error } = await supabase
+          .from("packages")
+          .select("id")
+          .eq("name", selected)
+          .eq("is_active", true)
+          .single()
+        if (error) throw error
+        packageId = item.id
+      } else {
+        const serviceName = isPedicure ? "Pedicure" : selected
+        const { data: item, error } = await supabase
+          .from("services")
+          .select("id")
+          .eq("name", serviceName)
+          .eq("is_active", true)
+          .single()
+        if (error) throw error
+        serviceId = item.id
+        if (isPedicure) serviceOption = selected === "Half Pedicure" ? "Half" : "Full"
+      }
+
+      const [clock, period] = String(data.get("time")).split(" ")
+      const [rawHours, minutes] = clock.split(":")
+      const hours = Number(rawHours) % 12 + (period === "PM" ? 12 : 0)
+      const timeSlot = `${String(hours).padStart(2, "0")}:${minutes}:00`
+
+      const { error } = await supabase.from("bookings").insert({
+        customer_name: data.get("name"),
+        customer_phone: data.get("phone"),
+        service_id: serviceId,
+        package_id: packageId,
+        service_option: serviceOption,
+        service_name_snapshot: selected,
+        price_snapshot: null,
+        booking_date: data.get("date"),
+        time_slot: timeSlot,
+        status: "pending",
+        source: "website",
+        created_by: null,
+        notes: data.get("message") || null
+      })
+
+      if (error) throw error
+
+      const message = `Hello Celestique Beauty Spa, I have submitted an appointment request.
 
 Name: ${data.get("name")}
 Phone: ${data.get("phone")}
-Service: ${data.get("service")}
+Service: ${selected}
 Preferred date: ${data.get("date")}
 Preferred time: ${data.get("time")}
 Additional message: ${data.get("message") || "None"}
 
 Please confirm availability. Thank you.`
-    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+
+      setBookingMessage("Your booking request has been saved successfully. Please contact the salon on WhatsApp to confirm availability.")
+      setBookingWhatsAppUrl(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`)
+    } catch (error) {
+      console.error("Booking submission failed:", error)
+      if (error?.code === "23505" || error?.constraint === "bookings_one_active_per_slot") {
+        setBookingMessage("Sorry, that appointment time has just been taken. Please choose another time.")
+      } else {
+        setBookingMessage("We couldnt submit your booking. Please try another date or time, or contact the salon for assistance.")
+      }
+    } finally {
+      setBookingLoading(false)
+    }
   }
 
   return (
@@ -266,7 +504,7 @@ Please confirm availability. Thank you.`
         </div>
 
         <div className="service-grid">
-          {services.map((service, index) => (
+          {activeServices.map((service, index) => (
             <article className="service-card" key={service.name}>
               <div className="service-image">
                 <img
@@ -307,7 +545,7 @@ Please confirm availability. Thank you.`
           <p>Enjoy more of your favourite treatments with our special offers.</p>
         </div>
         <div className="packages-grid">
-          {packages.map((item) => (
+          {activePackages.map((item) => (
             <article className="package-card" key={item.name}>
               <span className="package-label">SPECIAL OFFER</span>
               <h3>{item.name}</h3>
@@ -344,7 +582,7 @@ Please confirm availability. Thank you.`
         <p>Request your preferred appointment at Celestique Beauty Spa.</p>
 
         <form className="booking-form" onSubmit={submitBooking}>
-          <div className="booking-fields">
+          <fieldset className="booking-fields" disabled={Boolean(bookingWhatsAppUrl)} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
             <label>Full name
               <input name="name" type="text" placeholder="Your full name" required />
             </label>
@@ -356,7 +594,7 @@ Please confirm availability. Thank you.`
             <label>Choose a service
               <select name="service" defaultValue="" required>
                 <option value="" disabled>Select a service</option>
-                {services.map((service) => (
+                {activeServices.map((service) => (
                   service.name === 'Pedicure' ? (
                     <optgroup key={service.name} label="Pedicure">
                       <option value="Half Pedicure">Half Pedicure — KSh 350</option>
@@ -367,39 +605,49 @@ Please confirm availability. Thank you.`
                   )
                 ))}
                 <optgroup label="Special packages">
-                  {packages.map((item) => <option key={item.name} value={item.name}>{item.name} — {item.price}</option>)}
+                  {activePackages.map((item) => <option key={item.name} value={item.name}>{item.name} — {item.price}</option>)}
                 </optgroup>
               </select>
             </label>
 
             <label>Preferred date
-              <input name="date" type="date" min={today} required />
+              <input name="date" type="date" min={today} required disabled={businessHours.length !== 7} onChange={handleBookingDateChange} />
+              {dateMessage && <p className="booking-feedback" role="alert">{dateMessage}</p>}
             </label>
 
             <label>Preferred time
-              <select name="time" defaultValue="" required>
-                <option value="" disabled>Select a preferred time</option>
-                <option>8:00 AM</option>
-                <option>9:00 AM</option>
-                <option>10:00 AM</option>
-                <option>11:00 AM</option>
-                <option>12:00 PM</option>
-                <option>1:00 PM</option>
-                <option>2:00 PM</option>
-                <option>3:00 PM</option>
-                <option>4:00 PM</option>
-                <option>5:00 PM</option>
+              <select
+                name="time"
+                value={selectedBookingTime}
+                onChange={(event) => setSelectedBookingTime(event.target.value)}
+                required
+                disabled={!selectedBookingDate || availableBookingTimes.length === 0}
+              >
+                <option value="">
+                  {!selectedBookingDate ? "Select a date first" : "Select a preferred time"}
+                </option>
+                {availableBookingTimes.map(time => (
+                  <option key={time} value={time}>{time}</option>
+                ))}
               </select>
             </label>
 
             <label className="booking-message">Additional message (optional)
               <textarea name="message" rows="3" placeholder="Any preferences or details we should know?" />
             </label>
-          </div>
+          </fieldset>
 
-          <button className="btn btn-light booking-submit" type="submit">
-            Send Booking Request via WhatsApp ↗
-          </button>
+          {!bookingWhatsAppUrl && (
+            <button className="btn btn-light booking-submit" type="submit" disabled={bookingLoading}>
+              {bookingLoading ? "Saving booking..." : "Send Booking Request"}
+            </button>
+          )}
+          {bookingMessage && <p className="booking-feedback" role="status">{bookingMessage}</p>}
+          {bookingWhatsAppUrl && (
+            <a className="btn btn-primary booking-submit" href={bookingWhatsAppUrl} target="_blank" rel="noreferrer">
+              Continue on WhatsApp ↗
+            </a>
+          )}
           <small className="booking-note">Your appointment is confirmed only after Celestique checks availability and responds.</small>
         </form>
       </section>
