@@ -2125,3 +2125,128 @@ main {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Celestique admin account dropdown */
+.admin-side-bottom {
+  position: relative;
+  display: block;
+}
+
+.admin-profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #38342d;
+  border-radius: 9px;
+  background: #211f1b;
+  color: var(--text, #f5f0e7);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+
+.admin-profile-trigger:hover {
+  border-color: var(--gold);
+  background: #29251f;
+}
+
+.admin-profile-trigger .admin-avatar {
+  flex: 0 0 36px;
+}
+
+.admin-profile-trigger .admin-user {
+  flex: 1;
+}
+
+.admin-profile-chevron {
+  color: var(--gold);
+  font-size: 16px;
+}
+
+.admin-profile-dropdown {
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  bottom: calc(100% + 10px);
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #484239;
+  border-radius: 10px;
+  background: #211f1b;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, .4);
+}
+
+.admin-profile-heading {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.admin-profile-detail {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 13px;
+  overflow-wrap: anywhere;
+}
+
+.admin-profile-label {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.admin-profile-detail strong {
+  color: #f5f0e7;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-profile-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 5px 0 14px;
+  color: #b9b2a4;
+  font-size: 10px;
+}
+
+.admin-profile-status > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #72b98b;
+}
+
+.admin-profile-dropdown .admin-signout {
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 10px;
+  border-color: #60413b;
+  color: #e5a69b;
+}
+
+.admin-profile-dropdown .admin-signout:hover {
+  background: #382622;
+}
+
+.admin-profile-dropdown .admin-signout:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 650px) {
+  .admin-side-bottom {
+    display: block;
+  }
+
+  .admin-profile-dropdown {
+    position: static;
+    width: 100%;
+    margin-top: 10px;
+  }
+}

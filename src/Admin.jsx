@@ -25,6 +25,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [user, setUser] = useState(null)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [message, setMessage] = useState("")
   const [appointments, setAppointments] = useState([])
   const [appointmentsLoading, setAppointmentsLoading] = useState(false)
@@ -369,9 +370,40 @@ export default function Admin() {
         <p className="admin-nav-label">GENERAL</p>
         <a href="/" className="admin-side-link">↗ <span>View website</span></a>
         <div className="admin-side-bottom">
-          <div className="admin-avatar">{(user.email || "A")[0].toUpperCase()}</div>
-          <div className="admin-user"><strong>Administrator</strong><small>{user.email}</small></div>
-          <button className="admin-signout" onClick={signOut} title="Sign out">↪ <span>Sign out</span></button>
+          <button
+            className="admin-profile-trigger"
+            onClick={() => setProfileOpen(!profileOpen)}
+            aria-expanded={profileOpen}
+            aria-haspopup="true"
+            aria-label="Admin account details"
+          >
+            <span className="admin-avatar">{(user.email || "A")[0].toUpperCase()}</span>
+            <span className="admin-user">
+              <strong>Administrator</strong>
+              <small>{user.email}</small>
+            </span>
+            <span className="admin-profile-chevron">{profileOpen ? "⌄" : "⌃"}</span>
+          </button>
+
+          {profileOpen && (
+            <div className="admin-profile-dropdown">
+              <span className="admin-profile-heading">ACCOUNT DETAILS</span>
+              <div className="admin-profile-detail">
+                <span className="admin-profile-label">Account</span>
+                <strong>Administrator</strong>
+              </div>
+              <div className="admin-profile-detail">
+                <span className="admin-profile-label">Email address</span>
+                <strong>{user.email}</strong>
+              </div>
+              <div className="admin-profile-status">
+                <span></span> Authorized administrator
+              </div>
+              <button className="admin-signout" onClick={signOut} disabled={submitting}>
+                ↪ <span>Sign out</span>
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
