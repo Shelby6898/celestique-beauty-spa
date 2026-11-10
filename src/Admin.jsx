@@ -167,7 +167,7 @@ export default function Admin() {
   return (
     <main className="salon-admin">
       <aside className="admin-sidebar">
-        <a className="admin-logo" href="/"><span>C</span><div>CELESTIQUE<small>BEAUTY SPA</small></div></a>
+        <a className="admin-logo" href="/" aria-label="Celestique Beauty Spa home"><img src="/images/celestique-logo.jpg" alt="Celestique Beauty Spa" /></a>
         <p className="admin-nav-label">WORKSPACE</p>
         <button className={view === "overview" ? "active" : ""} onClick={() => setView("overview")}>◫ <span>Overview</span></button>
         <button className={view === "appointments" ? "active" : ""} onClick={() => setView("appointments")}>▤ <span>Appointments</span><b>{counts.pending}</b></button>
@@ -264,7 +264,14 @@ export default function Admin() {
           )
         })()}
 
-        <footer className="admin-footer">Celestique Beauty Spa <span>•</span> Management portal</footer>
+        <footer className="admin-footer">
+          <img src="/images/celestique-logo.jpg" alt="Celestique Beauty Spa" />
+          <p>Beauty • Elegance • Confidence</p>
+          <div className="admin-footer-bottom">
+            <span>© {new Date().getFullYear()} Celestique Beauty Spa. All rights reserved.</span>
+            <span>Management portal</span>
+          </div>
+        </footer>
       </section>
     </main>
   )
