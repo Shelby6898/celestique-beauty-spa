@@ -1162,10 +1162,15 @@ main {
 
 .admin-signout {
   margin-left: auto;
-  background: none;
-  border: 0;
-  color: var(--muted);
-  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid #484239;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gold-soft);
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -1551,8 +1556,13 @@ main {
   }
   .admin-logo { margin: 0 0 13px; }
   .admin-sidebar .admin-nav-label,
-  .admin-side-bottom,
-  .admin-side-link { display: none; }
+.admin-side-link { display: none; }
+.admin-side-bottom {
+  display: flex;
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+}
   .admin-sidebar > button {
     display: inline-flex;
     width: auto;
@@ -2068,4 +2078,50 @@ main {
   .business-hours .admin-section-heading {
     align-items: flex-start;
   }
+}
+
+/* Admin authentication controls */
+.admin-password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.admin-password-field input {
+  width: 100%;
+  min-width: 0;
+  padding-right: 68px;
+}
+
+.admin-password-toggle {
+  position: absolute;
+  right: 8px;
+  padding: 6px 9px;
+  border: 1px solid #454139;
+  border-radius: 5px;
+  background: #25231e;
+  color: var(--gold-soft);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.admin-forgot-password,
+.admin-recovery-back {
+  justify-self: end;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--gold);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-recovery-back {
+  justify-self: center;
+}
+
+.admin-forgot-password:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

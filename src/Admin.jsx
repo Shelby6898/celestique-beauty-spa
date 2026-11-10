@@ -14,6 +14,14 @@ const moneyDate = (value) => value
 export default function Admin() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [recoveryMode, setRecoveryMode] = useState(
+    new URLSearchParams(window.location.search).get("password-reset") === "true"
+  )
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [user, setUser] = useState(null)
@@ -63,14 +71,26 @@ export default function Admin() {
     let active = true
 
     supabase.auth.getSession().then(({ data }) => {
-      if (active) verifyAdmin(data.session)
+      if (!active) return
+      if (recoveryMode) setLoading(false)
+      else verifyAdmin(data.session)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (active) setTimeout(() => {
-          if (active) verifyAdmin(session)
-        }, 0)
+      (event, session) => {
+        if (!active) return
+
+        if (event === "PASSWORD_RECOVERY") {
+          setRecoveryMode(true)
+          setLoading(false)
+          return
+        }
+
+        if (!recoveryMode) {
+          setTimeout(() => {
+            if (active) verifyAdmin(session)
+          }, 0)
+        }
       }
     )
 
@@ -78,7 +98,7 @@ export default function Admin() {
       active = false
       listener.subscription.unsubscribe()
     }
-  }, [])
+  }, [recoveryMode])
 
   useEffect(() => {
     if (!user) return
@@ -100,11 +120,88 @@ export default function Admin() {
     setSubmitting(false)
   }
 
-  const signOut = async () => {
+  const sendPasswordReset = async () => {
+    if (!email.trim()) {
+      setMessage("Enter your administrator email address first.")
+      return
+    }
+
+    setSubmitting(true)
+    setMessage("")
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim(),
+      {
+        redirectTo: `${window.location.origin}/admin?password-reset=true`
+      }
+    )
+
+    setMessage(
+      error
+        ? error.message
+        : "If an account exists for that email, a password reset link has been sent."
+    )
+    setSubmitting(false)
+  }
+
+  const updatePassword = async (event) => {
+    event.preventDefault()
+    setMessage("")
+
+    if (newPassword.length < 8) {
+      setMessage("Your new password must be at least 8 characters.")
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setMessage("The passwords do not match.")
+      return
+    }
+
+    setSubmitting(true)
+
+    const { data } = await supabase.auth.getSession()
+
+    if (!data.session) {
+      setMessage("Your recovery session has expired. Request a new reset link.")
+      setSubmitting(false)
+      return
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    })
+
+    if (error) {
+      setMessage(error.message)
+      setSubmitting(false)
+      return
+    }
+
     await supabase.auth.signOut()
+    window.history.replaceState({}, document.title, "/admin")
+    setRecoveryMode(false)
+    setNewPassword("")
+    setConfirmPassword("")
+    setPassword("")
+    setMessage("Password updated successfully. Please sign in with your new password.")
+    setSubmitting(false)
+  }
+
+  const signOut = async () => {
+    setSubmitting(true)
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      setMessage("Could not sign out: " + error.message)
+      setSubmitting(false)
+      return
+    }
+
     setUser(null)
     setAppointments([])
     setMessage("You have signed out.")
+    setSubmitting(false)
   }
 
   const updateStatus = async (id, status) => {
@@ -142,6 +239,76 @@ export default function Admin() {
 
   if (loading) return <main className="admin-loading">Loading administrator access...</main>
 
+  if (recoveryMode) return (
+    <main className="admin-login-page">
+      <form className="admin-login" onSubmit={updatePassword}>
+        <div className="admin-brand-mark">C</div>
+        <p className="admin-eyebrow">CELESTIQUE BEAUTY SPA</p>
+        <h1>Reset your password</h1>
+        <p className="admin-muted">Choose a new password for your administrator account.</p>
+
+        <label htmlFor="admin-new-password">New password</label>
+        <div className="admin-password-field">
+          <input
+            id="admin-new-password"
+            type={showNewPassword ? "text" : "password"}
+            value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
+            autoComplete="new-password"
+            required
+          />
+          <button
+            className="admin-password-toggle"
+            type="button"
+            onClick={() => setShowNewPassword(value => !value)}
+            aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+          >
+            {showNewPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+
+        <label htmlFor="admin-confirm-password">Confirm new password</label>
+        <div className="admin-password-field">
+          <input
+            id="admin-confirm-password"
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+            required
+          />
+          <button
+            className="admin-password-toggle"
+            type="button"
+            onClick={() => setShowConfirmPassword(value => !value)}
+            aria-label={showConfirmPassword ? "Hide confirmation" : "Show confirmation"}
+          >
+            {showConfirmPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+
+        <button className="admin-primary" type="submit" disabled={submitting}>
+          {submitting ? "Updating password..." : "Update password"}
+        </button>
+
+        {message && <p className="admin-message" role="alert">{message}</p>}
+
+        <button
+          className="admin-recovery-back"
+          type="button"
+          onClick={async () => {
+            await supabase.auth.signOut()
+            window.history.replaceState({}, document.title, "/admin")
+            setRecoveryMode(false)
+            setMessage("")
+          }}
+        >
+          Return to sign in
+        </button>
+      </form>
+    </main>
+  )
+
   if (!user) return (
     <main className="admin-login-page">
       <form className="admin-login" onSubmit={signIn}>
@@ -153,8 +320,32 @@ export default function Admin() {
         <input id="admin-email" type="email" value={email}
           onChange={e => setEmail(e.target.value)} autoComplete="username" required />
         <label htmlFor="admin-password">Password</label>
-        <input id="admin-password" type="password" value={password}
-          onChange={e => setPassword(e.target.value)} autoComplete="current-password" required />
+        <div className="admin-password-field">
+          <input
+            id="admin-password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
+          <button
+            className="admin-password-toggle"
+            type="button"
+            onClick={() => setShowPassword(value => !value)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+        <button
+          className="admin-forgot-password"
+          type="button"
+          onClick={sendPasswordReset}
+          disabled={submitting}
+        >
+          Forgot password?
+        </button>
         <button className="admin-primary" type="submit" disabled={submitting}>
           {submitting ? "Signing in..." : "Sign in to dashboard"}
         </button>
@@ -180,7 +371,7 @@ export default function Admin() {
         <div className="admin-side-bottom">
           <div className="admin-avatar">{(user.email || "A")[0].toUpperCase()}</div>
           <div className="admin-user"><strong>Administrator</strong><small>{user.email}</small></div>
-          <button className="admin-signout" onClick={signOut} title="Sign out">↪</button>
+          <button className="admin-signout" onClick={signOut} title="Sign out">↪ <span>Sign out</span></button>
         </div>
       </aside>
 
