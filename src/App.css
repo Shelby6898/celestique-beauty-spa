@@ -1066,14 +1066,15 @@ main {
 }
 
 .admin-logo {
+  width: 100%;
   justify-content: center;
 }
 
 .admin-logo > img {
   display: block;
-  width: 180px;
+  width: 145px;
   max-width: 100%;
-  height: auto;
+  height: 62px;
   object-fit: contain;
 }
 
@@ -1429,9 +1430,9 @@ main {
 
 .admin-footer > img {
   display: block;
-  width: 145px;
+  width: 120px;
   max-width: 100%;
-  height: auto;
+  height: 52px;
   margin: 0 auto 12px;
   object-fit: contain;
 }
