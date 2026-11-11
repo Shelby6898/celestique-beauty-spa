@@ -749,6 +749,10 @@ Please confirm availability. Thank you.`
             </a>
           )}
           <small className="booking-note">Your appointment is confirmed only after Celestique checks availability and responds.</small>
+          <p className="booking-privacy-note">
+            Your details are used to manage your appointment request.
+            <a href="/privacy">Read our Privacy Notice</a>.
+          </p>
         </form>
       </section>
 
@@ -802,6 +806,11 @@ Please confirm availability. Thank you.`
           <img src={getSiteAssetUrl("logo") || "/images/celestique-logo.jpg"} alt={getSiteAssetAlt("logo", "Celestique Beauty Spa")} className="brand-logo" />
         </a>
         <p>Beauty • Elegance • Confidence</p>
+        <nav className="footer-legal" aria-label="Legal information">
+          <a href="/privacy">Privacy Notice</a>
+          <a href="/cookies">Cookie &amp; Browser Storage Notice</a>
+          <a href="mailto:andayitimothy48@gmail.com">Privacy enquiries</a>
+        </nav>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Celestique Beauty Spa. All rights reserved.</span>
           <span>Digital experience by Taifatech Solutions</span>

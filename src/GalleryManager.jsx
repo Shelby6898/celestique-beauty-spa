@@ -18,7 +18,6 @@ export default function GalleryManager() {
   const [message, setMessage] = useState("")
 
   async function loadPhotos() {
-    setLoading(true)
     const { data, error } = await supabase
       .from("gallery_photos")
       .select("id, storage_path, caption, is_published, display_order, created_at")
@@ -33,8 +32,13 @@ export default function GalleryManager() {
     setLoading(false)
   }
 
+  async function handleRefresh() {
+    setLoading(true)
+    await loadPhotos()
+  }
+
   useEffect(() => {
-    loadPhotos()
+    Promise.resolve().then(() => loadPhotos())
   }, [])
 
   function imageUrl(path) {
@@ -145,7 +149,7 @@ export default function GalleryManager() {
           <h2>Happy Clients</h2>
           <p>Upload, organize and publish client photos on your website.</p>
         </div>
-          <button type="button" onClick={loadPhotos} disabled={loading}>
+          <button type="button" onClick={handleRefresh} disabled={loading}>
             {loading ? "Refreshing..." : "Refresh"}
           </button>
       </div>
