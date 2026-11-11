@@ -121,6 +121,7 @@ function App() {
   const [activePackages, setActivePackages] = useState([])
   const [businessHours, setBusinessHours] = useState([])
   const [blockedDates, setBlockedDates] = useState([])
+  const [publishedGallery, setPublishedGallery] = useState([])
   const [selectedBookingDate, setSelectedBookingDate] = useState("")
   const [selectedBookingTime, setSelectedBookingTime] = useState("")
   const [dateMessage, setDateMessage] = useState("")
@@ -191,6 +192,36 @@ function App() {
     }
 
     loadBlockedDates()
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadPublishedGallery = async () => {
+      const { data, error } = await supabase
+        .from("gallery_photos")
+        .select("id, storage_path, caption")
+        .eq("is_published", true)
+        .order("display_order", { ascending: true })
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Could not load gallery photos:", error)
+        return
+      }
+
+      const photos = (data || []).map(item => ({
+        ...item,
+        url: supabase.storage
+          .from("gallery-photos")
+          .getPublicUrl(item.storage_path).data.publicUrl
+      }))
+
+      if (!cancelled) setPublishedGallery(photos)
+    }
+
+    loadPublishedGallery()
+    return () => { cancelled = true }
   }, [])
 
   const handleBookingDateChange = (event) => {
@@ -572,8 +603,17 @@ Please confirm availability. Thank you.`
         </div>
         <div className="gallery-grid">
           {gallery.map((id, index) => (
-            <div className="gallery-item" key={id + index}>
+            <div className="gallery-item" key={`default-${index}`}>
               <img src={id} alt={`Celestique Beauty Spa service ${index + 1}`} loading="lazy" />
+            </div>
+          ))}
+          {publishedGallery.map(item => (
+            <div className="gallery-item" key={item.id}>
+              <img
+                src={item.url}
+                alt={item.caption || "Celestique Beauty Spa happy client"}
+                loading="lazy"
+              />
             </div>
           ))}
         </div>
