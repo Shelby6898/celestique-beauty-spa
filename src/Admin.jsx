@@ -3,6 +3,7 @@ import { supabase } from "./lib/supabase"
 import CatalogManager from "./CatalogManager"
 import BusinessHours from "./BusinessHours"
 import GalleryManager from "./GalleryManager"
+import SiteAssetsManager from "./SiteAssetsManager"
 
 const statuses = ["all", "pending", "confirmed", "completed", "cancelled"]
 
@@ -380,6 +381,7 @@ export default function Admin() {
         <button className={view === "hours" ? "active" : ""} onClick={() => setView("hours")}>◷ <span>Business Hours</span></button>
         <button className={view === "gallery" ? "active" : ""} onClick={() => setView("gallery")}>◎ <span>Happy Clients</span></button>
         <p className="admin-nav-label">GENERAL</p>
+        <button className={view === "site-assets" ? "active" : ""} onClick={() => setView("site-assets")}>▧ <span>Website Images</span></button>
         <a href="/" className="admin-side-link">↗ <span>View website</span></a>
         <div className="admin-side-bottom">
           <button
@@ -421,8 +423,8 @@ export default function Admin() {
 
       <section className="admin-main">
         <header className="admin-topbar">
-          <div><span className="admin-eyebrow">SALON MANAGEMENT</span><h1>{{ overview: "Dashboard overview", appointments: "Appointments", services: "Services", packages: "Packages", hours: "Business Hours", gallery: "Happy Clients Gallery" }[view]}</h1></div>
-          {!['services', 'packages', 'hours', 'gallery'].includes(view) && <button className="admin-refresh" onClick={loadAppointments}>↻ <span>Refresh</span></button>}
+          <div><span className="admin-eyebrow">SALON MANAGEMENT</span><h1>{{ overview: "Dashboard overview", appointments: "Appointments", services: "Services", packages: "Packages", hours: "Business Hours", gallery: "Happy Clients Gallery", "site-assets": "Website Images" }[view]}</h1></div>
+          {!['services', 'packages', 'hours', 'gallery', 'site-assets'].includes(view) && <button className="admin-refresh" onClick={loadAppointments}>↻ <span>Refresh</span></button>}
         </header>
 
         {message && <p className="admin-message" role="alert">{message}</p>}
@@ -448,6 +450,7 @@ export default function Admin() {
         {view === "packages" && <CatalogManager type="packages" />}
         {view === "hours" && <BusinessHours />}
           {view === "gallery" && <GalleryManager />}
+          {view === "site-assets" && <SiteAssetsManager />}
 
         {view === "appointments" && <section className="admin-content-card">
           <div className="admin-section-heading"><div><h2>All appointments</h2><p>Review and manage customer bookings</p></div></div>

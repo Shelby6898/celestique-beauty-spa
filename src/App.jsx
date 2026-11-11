@@ -122,24 +122,69 @@ function App() {
   const [businessHours, setBusinessHours] = useState([])
   const [blockedDates, setBlockedDates] = useState([])
   const [publishedGallery, setPublishedGallery] = useState([])
+  const [publishedSiteAssets, setPublishedSiteAssets] = useState([])
   const [selectedBookingDate, setSelectedBookingDate] = useState("")
   const [selectedBookingTime, setSelectedBookingTime] = useState("")
   const [dateMessage, setDateMessage] = useState("")
 
+  const findSiteAsset = type => publishedSiteAssets.find(asset => asset.asset_type === type)
+  const getSiteAssetUrl = type => {
+    const asset = findSiteAsset(type)
+    return asset?.public_path
+      ? supabase.storage.from("site-assets-public").getPublicUrl(asset.public_path).data.publicUrl
+      : null
+  }
+
+  const getSiteAssetAlt = (type, fallback) => {
+    return findSiteAsset(type)?.alt_text || fallback
+  }
+
+  const publishedOtherAssets = publishedSiteAssets
+    .filter(asset => asset.asset_type === "other" && asset.public_path)
+    .sort((a, b) => Number(a.display_order || 0) - Number(b.display_order || 0))
+
+  useEffect(() => {
+    let cancelled = false
+    const loadSiteAssets = async () => {
+      const { data, error } = await supabase.from("site_assets")
+        .select("asset_type, service_id, public_path, alt_text, display_order")
+        .eq("is_published", true)
+      if (error) {
+        console.error("Could not load published website images:", error)
+        return
+      }
+      if (!cancelled) setPublishedSiteAssets(data || [])
+    }
+    loadSiteAssets()
+    return () => { cancelled = true }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     const loadServices = async () => {
-      const { data, error } = await supabase.from("services").select("name, category, description, price_label, is_active").eq("is_active", true).order("display_order", { ascending: true })
+      const { data, error } = await supabase.from("services").select("id, name, category, description, price_label, is_active, image_path").eq("is_active", true).order("display_order", { ascending: true })
       if (error) { console.error("Could not load services:", error); return }
       const live = data.map(item => {
         const original = services.find(service => service.name === item.name)
-        return { ...original, ...item, category: original?.category || item.category.toUpperCase(), price: item.price_label || original?.price || "" }
+        const managedImage = item.image_path
+        ? supabase.storage.from("site-assets-public").getPublicUrl(item.image_path).data.publicUrl
+        : null
+      return {
+        ...original,
+        ...item,
+        image: managedImage || original?.image,
+        imageAlt: publishedSiteAssets.find(
+          asset => asset.asset_type === "service" && asset.service_id === item.id
+        )?.alt_text || item.name,
+        category: original?.category || (item.category || "").toUpperCase(),
+        price: item.price_label || original?.price || ""
+      }
       })
       if (!cancelled) setActiveServices(live)
     }
     loadServices()
     return () => { cancelled = true }
-  }, [])
+  }, [publishedSiteAssets])
 
   useEffect(() => {
     let cancelled = false
@@ -411,7 +456,7 @@ Please confirm availability. Thank you.`
 
       <header className="navbar">
         <a className="brand" href="#home" onClick={closeMenu}>
-          <img src="/images/celestique-logo.jpg" alt="Celestique Beauty Spa" className="brand-logo" />
+          <img src={getSiteAssetUrl("logo") || "/images/celestique-logo.jpg"} alt={getSiteAssetAlt("logo", "Celestique Beauty Spa")} className="brand-logo" />
           <span className="brand-name">Celestique</span>
           <span className="brand-subtitle">BEAUTY SPA</span>
         </a>
@@ -471,8 +516,8 @@ Please confirm availability. Thank you.`
 
         <div className="hero-image">
           <img
-            src={photo('photo-1522337360788-8b13dee7a37e', 1100)}
-            alt="Beauty and skincare experience"
+            src={getSiteAssetUrl("hero") || photo("photo-1522337360788-8b13dee7a37e", 1100)}
+            alt={getSiteAssetAlt("hero", "Beauty and skincare experience")}
           />
           <div className="image-caption">
             <span>THE CELESTIQUE EXPERIENCE</span>
@@ -502,8 +547,8 @@ Please confirm availability. Thank you.`
       <section className="section about-section" id="about">
         <div className="about-image">
           <img
-            src={photo('photo-1540555700478-4be289fbecef', 900)}
-            alt="Relaxing beauty spa atmosphere"
+            src={getSiteAssetUrl("about") || photo("photo-1540555700478-4be289fbecef", 900)}
+            alt={getSiteAssetAlt("about", "Relaxing beauty spa atmosphere")}
             loading="lazy"
           />
           <span className="about-image-label">A SPACE TO FEEL BEAUTIFUL</span>
@@ -542,8 +587,8 @@ Please confirm availability. Thank you.`
             <article className="service-card" key={service.name}>
               <div className="service-image">
                 <img
-                  src={service.image.startsWith('/') ? service.image : photo(service.image, 650)}
-                  alt={service.name}
+                  src={service.image?.startsWith("/") || service.image?.startsWith("http") ? service.image : photo(service.image, 650)}
+                  alt={service.imageAlt || service.name}
                   loading="lazy"
                 />
                 <span className="service-number">
@@ -602,11 +647,23 @@ Please confirm availability. Thank you.`
           <p>Explore the world of beauty, care and elegance.</p>
         </div>
         <div className="gallery-grid">
-          {gallery.map((id, index) => (
-            <div className="gallery-item" key={`default-${index}`}>
-              <img src={id} alt={`Celestique Beauty Spa service ${index + 1}`} loading="lazy" />
-            </div>
-          ))}
+          {publishedOtherAssets.length > 0 ? (
+            publishedOtherAssets.map(asset => (
+              <div className="gallery-item" key={asset.id}>
+                <img
+                  src={supabase.storage.from("site-assets-public").getPublicUrl(asset.public_path).data.publicUrl}
+                  alt={asset.alt_text || asset.caption || "Celestique Beauty Spa"}
+                  loading="lazy"
+                />
+              </div>
+            ))
+          ) : (
+            gallery.map((id, index) => (
+              <div className="gallery-item" key={`default-${index}`}>
+                <img src={id} alt={`Celestique Beauty Spa service ${index + 1}`} loading="lazy" />
+              </div>
+            ))
+          )}
           {publishedGallery.map(item => (
             <div className="gallery-item" key={item.id}>
               <img
@@ -742,7 +799,7 @@ Please confirm availability. Thank you.`
 
       <footer className="footer">
         <a className="brand footer-brand" href="#home">
-          <img src="/images/celestique-logo.jpg" alt="Celestique Beauty Spa" className="brand-logo" />
+          <img src={getSiteAssetUrl("logo") || "/images/celestique-logo.jpg"} alt={getSiteAssetAlt("logo", "Celestique Beauty Spa")} className="brand-logo" />
         </a>
         <p>Beauty • Elegance • Confidence</p>
         <div className="footer-bottom">
