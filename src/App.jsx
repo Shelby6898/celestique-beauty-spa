@@ -377,7 +377,6 @@ function App() {
       const selected = String(data.get("service") || "")
       const customerName = String(data.get("name") || "")
       const customerPhone = String(data.get("phone") || "")
-      const customerMessage = String(data.get("message") || "")
 
       const { data: result, error } = await supabase.functions.invoke(
         "create-booking",
@@ -388,7 +387,6 @@ function App() {
             service: selected,
             date: requestedDate,
             time: requestedTime,
-            message: customerMessage,
           },
         }
       )
@@ -422,7 +420,6 @@ Phone: ${customerPhone}
 Service: ${selected}
 Preferred date: ${requestedDate}
 Preferred time: ${requestedTime}
-Additional message: ${customerMessage || "None"}
 
 Please confirm availability. Thank you.`
 
@@ -732,9 +729,6 @@ Please confirm availability. Thank you.`
               </select>
             </label>
 
-            <label className="booking-message">Additional message (optional)
-              <textarea name="message" rows="3" placeholder="Any preferences or details we should know?" />
-            </label>
           </fieldset>
 
           {!bookingWhatsAppUrl && (
@@ -750,7 +744,7 @@ Please confirm availability. Thank you.`
           )}
           <small className="booking-note">Your appointment is confirmed only after Celestique checks availability and responds.</small>
           <p className="booking-privacy-note">
-            Your details are used to manage your appointment request.
+            We use your name, phone number and appointment details to manage your request. If you continue on WhatsApp, the prepared appointment details will be shared with WhatsApp when you open the link.
             <a href="/privacy">Read our Privacy Notice</a>.
           </p>
         </form>

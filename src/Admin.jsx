@@ -5,6 +5,7 @@ import BusinessHours from "./BusinessHours"
 import GalleryManager from "./GalleryManager"
 import SiteAssetsManager from "./SiteAssetsManager"
 import AdminSettings from "./AdminSettings"
+import Reports from "./Reports"
 
 const statuses = ["all", "pending", "confirmed", "completed", "cancelled"]
 
@@ -382,6 +383,7 @@ export default function Admin() {
         <button className={view === "hours" ? "active" : ""} onClick={() => setView("hours")}>◷ <span>Business Hours</span></button>
         <button className={view === "gallery" ? "active" : ""} onClick={() => setView("gallery")}>◎ <span>Happy Clients</span></button>
         <p className="admin-nav-label">GENERAL</p>
+        <button className={view === "reports" ? "active" : ""} onClick={() => setView("reports")}>▥ <span>Reports</span></button>
         <button className={view === "site-assets" ? "active" : ""} onClick={() => setView("site-assets")}>▧ <span>Website Images</span></button>
             <button className={view === "settings" ? "active" : ""} onClick={() => setView("settings")}>⚙ <span>Settings</span></button>
         <a href="/" className="admin-side-link">↗ <span>View website</span></a>
@@ -425,7 +427,7 @@ export default function Admin() {
 
       <section className="admin-main">
         <header className="admin-topbar">
-          <div><span className="admin-eyebrow">SALON MANAGEMENT</span><h1>{{ overview: "Dashboard overview", appointments: "Appointments", services: "Services", packages: "Packages", hours: "Business Hours", gallery: "Happy Clients Gallery", "site-assets": "Website Images", settings: "Settings" }[view]}</h1></div>
+          <div><span className="admin-eyebrow">SALON MANAGEMENT</span><h1>{{ overview: "Dashboard overview", appointments: "Appointments", reports: "Business reports", services: "Services", packages: "Packages", hours: "Business Hours", gallery: "Happy Clients Gallery", "site-assets": "Website Images", settings: "Settings" }[view]}</h1></div>
           {!['services', 'packages', 'hours', 'gallery', 'site-assets', 'settings'].includes(view) && <button className="admin-refresh" onClick={loadAppointments}>↻ <span>Refresh</span></button>}
         </header>
 
@@ -454,6 +456,7 @@ export default function Admin() {
           {view === "gallery" && <GalleryManager />}
           {view === "site-assets" && <SiteAssetsManager />}
         {view === "settings" && <AdminSettings user={user} />}
+        {view === "reports" && <Reports appointments={appointments} loading={appointmentsLoading} /> }
 
         {view === "appointments" && <section className="admin-content-card">
           <div className="admin-section-heading"><div><h2>All appointments</h2><p>Review and manage customer bookings</p></div></div>
@@ -491,10 +494,6 @@ export default function Admin() {
                   <div><small>Booking status</small><strong className={"admin-status status-" + item.status}>{item.status}</strong></div>
                   <div><small>Booking source</small><strong>{item.source || "—"}</strong></div>
                   <div><small>Submitted</small><strong>{item.created_at ? new Date(item.created_at).toLocaleString("en-KE") : "—"}</strong></div>
-                </div>
-                <div className="admin-detail-notes">
-                  <small>Customer message / notes</small>
-                  <p>{item.notes || "No additional notes provided."}</p>
                 </div>
                 <div className="admin-detail-actions">
                   <a href={`https://wa.me/${number}?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">WhatsApp customer</a>
