@@ -2250,3 +2250,88 @@ main {
     margin-top: 10px;
   }
 }
+
+
+/* Celestique sign-in and password recovery refinement */
+.admin-login {
+  max-width: 430px;
+  gap: 15px;
+  padding: 38px 36px;
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+}
+
+.admin-login .admin-brand-logo {
+  display: block;
+  width: 210px;
+  max-width: 85%;
+  height: 92px;
+  margin: 0 auto 5px;
+  object-fit: contain;
+}
+
+.admin-login .admin-muted {
+  margin: -3px 0 9px;
+  line-height: 1.65;
+  text-align: center;
+  color: #aaa398;
+}
+
+.admin-login .admin-password-field input {
+  padding-right: 48px;
+}
+
+.admin-login .admin-password-toggle {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #a99e8b;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.admin-login .admin-password-toggle:hover {
+  background: rgba(216, 185, 130, 0.12);
+  color: var(--gold-soft);
+}
+
+.admin-login .admin-password-toggle svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-login .admin-password-toggle:focus-visible,
+.admin-login .admin-forgot-password:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.admin-login .admin-primary {
+  margin-top: 5px;
+  min-height: 46px;
+  letter-spacing: 0.2px;
+}
+
+@media (max-width: 600px) {
+  .admin-login {
+    padding: 30px 23px;
+  }
+
+  .admin-login .admin-brand-logo {
+    width: 190px;
+    height: 82px;
+  }
+}

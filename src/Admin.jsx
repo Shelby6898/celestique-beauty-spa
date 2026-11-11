@@ -243,8 +243,7 @@ export default function Admin() {
   if (recoveryMode) return (
     <main className="admin-login-page">
       <form className="admin-login" onSubmit={updatePassword}>
-        <div className="admin-brand-mark">C</div>
-        <p className="admin-eyebrow">CELESTIQUE BEAUTY SPA</p>
+        <img className="admin-brand-logo" src="/images/celestique-logo.jpg" alt="Celestique Beauty Spa" />
         <h1>Reset your password</h1>
         <p className="admin-muted">Choose a new password for your administrator account.</p>
 
@@ -264,7 +263,11 @@ export default function Admin() {
             onClick={() => setShowNewPassword(value => !value)}
             aria-label={showNewPassword ? "Hide new password" : "Show new password"}
           >
-            {showNewPassword ? "Hide" : "Show"}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+              {!showNewPassword && <path d="m3 3 18 18" />}
+            </svg>
           </button>
         </div>
 
@@ -284,7 +287,11 @@ export default function Admin() {
             onClick={() => setShowConfirmPassword(value => !value)}
             aria-label={showConfirmPassword ? "Hide confirmation" : "Show confirmation"}
           >
-            {showConfirmPassword ? "Hide" : "Show"}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+              {!showConfirmPassword && <path d="m3 3 18 18" />}
+            </svg>
           </button>
         </div>
 
@@ -313,8 +320,7 @@ export default function Admin() {
   if (!user) return (
     <main className="admin-login-page">
       <form className="admin-login" onSubmit={signIn}>
-        <div className="admin-brand-mark">C</div>
-        <p className="admin-eyebrow">CELESTIQUE BEAUTY SPA</p>
+        <img className="admin-brand-logo" src="/images/celestique-logo.jpg" alt="Celestique Beauty Spa" />
         <h1>Welcome back</h1>
         <p className="admin-muted">Sign in to manage your salon.</p>
         <label htmlFor="admin-email">Email address</label>
@@ -336,7 +342,11 @@ export default function Admin() {
             onClick={() => setShowPassword(value => !value)}
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
-            {showPassword ? "Hide" : "Show"}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+              {!showPassword && <path d="m3 3 18 18" />}
+            </svg>
           </button>
         </div>
         <button

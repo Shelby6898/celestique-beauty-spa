@@ -261,16 +261,22 @@ function App() {
     const data = new FormData(event.currentTarget)
     setBookingLoading(true)
     setBookingMessage("")
+    setBookingWhatsAppUrl("")
 
     const requestedDate = String(data.get("date") || "")
     const requestedTime = String(data.get("time") || "")
     const requestedDay = new Date(requestedDate + "T00:00:00Z").getUTCDay()
-    const requestedSchedule = businessHours.find(day => day.day_of_week === requestedDay)
+    const requestedSchedule = businessHours.find(
+      day => day.day_of_week === requestedDay
+    )
 
-    if (!requestedSchedule || requestedSchedule.is_closed ||
-        !availableBookingTimes.includes(requestedTime) ||
-        requestedDate !== selectedBookingDate ||
-        requestedTime !== selectedBookingTime) {
+    if (
+      !requestedSchedule ||
+      requestedSchedule.is_closed ||
+      !availableBookingTimes.includes(requestedTime) ||
+      requestedDate !== selectedBookingDate ||
+      requestedTime !== selectedBookingTime
+    ) {
       setBookingMessage("Please select a valid open date and appointment time.")
       setBookingLoading(false)
       return
@@ -290,78 +296,73 @@ function App() {
         return
       }
 
-      const selected = String(data.get("service"))
-      const isPedicure = selected === "Half Pedicure" || selected === "Full Pedicure"
-      const isPackage = activePackages.some(item => item.name === selected)
+      const selected = String(data.get("service") || "")
+      const customerName = String(data.get("name") || "")
+      const customerPhone = String(data.get("phone") || "")
+      const customerMessage = String(data.get("message") || "")
 
-      let serviceId = null
-      let packageId = null
-      let serviceOption = null
+      const { data: result, error } = await supabase.functions.invoke(
+        "create-booking",
+        {
+          body: {
+            name: customerName,
+            phone: customerPhone,
+            service: selected,
+            date: requestedDate,
+            time: requestedTime,
+            message: customerMessage,
+          },
+        }
+      )
 
-      if (isPackage) {
-        const { data: item, error } = await supabase
-          .from("packages")
-          .select("id")
-          .eq("name", selected)
-          .eq("is_active", true)
-          .single()
-        if (error) throw error
-        packageId = item.id
-      } else {
-        const serviceName = isPedicure ? "Pedicure" : selected
-        const { data: item, error } = await supabase
-          .from("services")
-          .select("id")
-          .eq("name", serviceName)
-          .eq("is_active", true)
-          .single()
-        if (error) throw error
-        serviceId = item.id
-        if (isPedicure) serviceOption = selected === "Half Pedicure" ? "Half" : "Full"
+      if (error) {
+        let errorMessage = "We couldn't submit your booking. Please try again later."
+
+        try {
+          const response = error.context
+          if (response && typeof response.json === "function") {
+            const responseBody = await response.json()
+            if (typeof responseBody.error === "string") {
+              errorMessage = responseBody.error
+            }
+          }
+        } catch {
+          // Keep the generic message if the response cannot be read.
+        }
+
+        throw new Error(errorMessage)
       }
 
-      const [clock, period] = String(data.get("time")).split(" ")
-      const [rawHours, minutes] = clock.split(":")
-      const hours = Number(rawHours) % 12 + (period === "PM" ? 12 : 0)
-      const timeSlot = `${String(hours).padStart(2, "0")}:${minutes}:00`
-
-      const { error } = await supabase.from("bookings").insert({
-        customer_name: data.get("name"),
-        customer_phone: data.get("phone"),
-        service_id: serviceId,
-        package_id: packageId,
-        service_option: serviceOption,
-        service_name_snapshot: selected,
-        price_snapshot: null,
-        booking_date: data.get("date"),
-        time_slot: timeSlot,
-        status: "pending",
-        source: "website",
-        created_by: null,
-        notes: data.get("message") || null
-      })
-
-      if (error) throw error
+      if (!result?.ok) {
+        throw new Error("We couldn't confirm your booking request. Please try again.")
+      }
 
       const message = `Hello Celestique Beauty Spa, I have submitted an appointment request.
 
-Name: ${data.get("name")}
-Phone: ${data.get("phone")}
+Name: ${customerName}
+Phone: ${customerPhone}
 Service: ${selected}
-Preferred date: ${data.get("date")}
-Preferred time: ${data.get("time")}
-Additional message: ${data.get("message") || "None"}
+Preferred date: ${requestedDate}
+Preferred time: ${requestedTime}
+Additional message: ${customerMessage || "None"}
 
 Please confirm availability. Thank you.`
 
       setBookingMessage("Your booking request has been saved successfully. Please contact the salon on WhatsApp to confirm availability.")
-      setBookingWhatsAppUrl(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`)
+      setBookingWhatsAppUrl(
+        `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+      )
     } catch (error) {
       console.error("Booking submission failed:", error)
-      if (error?.code === "23505" || error?.constraint === "bookings_one_active_per_slot") {
-        setBookingMessage("Sorry, that appointment time has just been taken. Please choose another time.")
+
+      const message = error instanceof Error ? error.message : ""
+
+      if (message.includes("just been taken")) {
+        setBookingMessage(message)
+      } else if (message) {
+        setBookingMessage(message)
       } else {
-        setBookingMessage("We couldnt submit your booking. Please try another date or time, or contact the salon for assistance.")
+        setBookingMessage("We couldn't submit your booking. Please try another date or time, or contact the salon for assistance.")
       }
     } finally {
       setBookingLoading(false)
