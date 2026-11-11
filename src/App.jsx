@@ -19,21 +19,21 @@ const services = [
     name: 'Manicure',
       price: 'KSh 350',
     description: 'Beautifully groomed nails with a polished, elegant finish.',
-    image: 'photo-1604654894610-df63bc536371',
+    image: '/images/bomalistica-nails-1.jpg',
   },
   {
     category: 'NAIL CARE',
     name: 'Pedicure',
       price: 'Half: KSh 350 · Full: KSh 500',
     description: 'Give your feet the care, comfort and attention they deserve.',
-    image: 'photo-1519014816548-bf5fe059798b',
+    image: '/images/bomalistica-nails-2.jpg',
   },
   {
     category: 'NAIL ENHANCEMENT',
     name: 'Gel Application',
       price: 'KSh 350',
     description: 'A glossy, refined finish for beautiful everyday nails.',
-    image: 'photo-1610992015732-2449b76344bc',
+    image: '/images/bomalistica-nails-3.jpg',
   },
   {
     category: 'NAIL ENHANCEMENT',
@@ -47,14 +47,14 @@ const services = [
     name: 'Builder Gel',
       price: 'KSh 500–800',
     description: 'Beautiful structure, strength and a natural-looking finish.',
-    image: 'photo-1604902396830-aca29e19b067',
+    image: '/images/bomalistica-nails-4.jpg',
   },
   {
     category: 'NAIL ENHANCEMENT',
     name: 'Ombré Nails',
       price: 'KSh 800',
     description: 'A seamless blend of colours for a sophisticated look.',
-    image: 'photo-1604654894610-df63bc536371',
+    image: '/images/bomalistica-nails-5.jpg',
   },
   {
     category: 'NAIL ENHANCEMENT',
@@ -101,9 +101,11 @@ const packages = [
 ]
 
 const gallery = [
-  '/images/acrylic-nails.jpg',
-  '/images/lashes-eyebrows.jpg',
-  '/images/nail-extensions.jpg',
+  '/images/bomalistica-nails-1.jpg',
+  '/images/bomalistica-nails-2.jpg',
+  '/images/bomalistica-nails-3.jpg',
+  '/images/bomalistica-nails-4.jpg',
+  '/images/bomalistica-nails-5.jpg',
 ]
 
 function photo(id, width = 700) {
