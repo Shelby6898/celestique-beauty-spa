@@ -694,7 +694,7 @@ Please confirm availability. Thank you.`
           <div>
             <span className="contact-label">OPENING HOURS</span>
             <p>Monday – Saturday</p>
-            <strong>8:00 AM – 6:00 PM</strong>
+            <strong>8:00 AM – 10:00 PM</strong>
             <p className="closed-note">Sunday — Closed</p>
           </div>
         </div>
