@@ -34,6 +34,7 @@ export default function Admin() {
   const [appointments, setAppointments] = useState([])
   const [appointmentsLoading, setAppointmentsLoading] = useState(false)
   const [filter, setFilter] = useState("all")
+  const [dateFilter, setDateFilter] = useState("all")
   const [search, setSearch] = useState("")
   const [view, setView] = useState("overview")
   const [updating, setUpdating] = useState(null)
@@ -233,13 +234,38 @@ export default function Admin() {
     completed: appointments.filter(a => a.status === "completed").length
   }
 
+  const today = new Date()
+  const dateKey = date =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+
+  const todayKey = dateKey(today)
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7))
+  const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6)
+  const weekStartKey = dateKey(monday)
+  const weekEndKey = dateKey(sunday)
+  const monthKey = todayKey.slice(0, 7)
+  const lastMonthStart = dateKey(new Date(today.getFullYear(), today.getMonth() - 1, 1))
+  const lastMonthEnd = dateKey(new Date(today.getFullYear(), today.getMonth(), 0))
+  const nextSevenDaysEnd = dateKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6))
+
   const visibleAppointments = appointments.filter(item => {
     const matchesStatus = filter === "all" || item.status === filter
+    const appointmentDate = String(item.booking_date || "")
+    const matchesDate =
+      dateFilter === "all" ||
+      (dateFilter === "daily" && appointmentDate === todayKey) ||
+      (dateFilter === "weekly" && appointmentDate >= weekStartKey && appointmentDate <= weekEndKey) ||
+      (dateFilter === "monthly" && appointmentDate.startsWith(monthKey)) ||
+      (dateFilter === "last-month" && appointmentDate >= lastMonthStart && appointmentDate <= lastMonthEnd) ||
+      (dateFilter === "next-seven-days" && appointmentDate >= todayKey && appointmentDate <= nextSevenDaysEnd) ||
+      (dateFilter === "upcoming" && appointmentDate >= todayKey && ["pending", "confirmed"].includes(item.status))
+
     const term = search.toLowerCase()
     const matchesSearch = [
       item.customer_name, item.customer_phone, item.service_name_snapshot
     ].some(value => (value || "").toLowerCase().includes(term))
-    return matchesStatus && matchesSearch
+
+    return matchesStatus && matchesDate && matchesSearch
   })
 
   if (loading) return <main className="admin-loading">Loading administrator access...</main>
@@ -462,7 +488,16 @@ export default function Admin() {
           <div className="admin-section-heading"><div><h2>All appointments</h2><p>Review and manage customer bookings</p></div></div>
           <div className="admin-toolbar">
             <input aria-label="Search appointments" placeholder="Search customer, phone or service..." value={search} onChange={e => setSearch(e.target.value)} />
-            <select aria-label="Filter by status" value={filter} onChange={e => setFilter(e.target.value)}>
+            <select aria-label="Filter by appointment date" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
+                <option value="all">All dates</option>
+                <option value="daily">Today</option>
+                <option value="weekly">This week</option>
+                <option value="monthly">This month</option>
+                <option value="last-month">Last month</option>
+                <option value="next-seven-days">Next 7 days</option>
+                <option value="upcoming">Upcoming (pending and confirmed)</option>
+              </select>
+              <select aria-label="Filter by status" value={filter} onChange={e => setFilter(e.target.value)}>
               {statuses.map(status => <option key={status} value={status}>{status === "all" ? "All statuses" : status[0].toUpperCase() + status.slice(1)}</option>)}
             </select>
           </div>
