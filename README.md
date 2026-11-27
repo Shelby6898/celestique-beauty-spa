@@ -3,7 +3,7 @@
 Responsive business website and appointment-management platform for Celestique Beauty Spa, Shamakhokho, Hamisi Constituency, Vihiga County, Kenya.
 
 **Production:** https://celestique-beauty-spa.vercel.app
-**Developer:** Taifatech Solutions
+**Developer:** Elphaz Shelby
 
 ## Customer Features
 - Responsive desktop and mobile website.
